@@ -229,7 +229,25 @@
   .quick-amt::after { content: ''; position: absolute; left: 2px; right: 2px; bottom: 0; height: 1px; background: var(--line); }
   .quick-amt:hover { color: var(--fg); }
 
+  /* collapsible category selector trigger */
+  .cat-select {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    background: none; border: 1px solid var(--line); color: var(--fg);
+    padding: 12px 14px; border-radius: 14px; cursor: pointer; font-family: inherit;
+    margin-bottom: 16px; transition: border-color .2s ease;
+  }
+  .cat-select:hover { border-color: var(--ink-faint); }
+  .cat-select[aria-expanded="true"] { border-color: var(--fg); }
+  .cat-select-current { display: flex; align-items: center; gap: 10px; text-transform: uppercase; font-size: 11px; letter-spacing: .12em; color: var(--ink-soft); }
+  .cat-select-current .label-pre { color: var(--ink-faint); }
+  .cat-select-current .emoji { font-size: 15px; }
+  .cat-select-current .cur { color: var(--fg); font-weight: 500; }
+  .cat-select-chevron { color: var(--ink-faint); font-size: 12px; transition: transform .25s ease; }
+  .cat-select[aria-expanded="true"] .cat-select-chevron { transform: rotate(180deg); }
+
   .cat-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .cat-chips.collapsed { display: none; }
+  .cat-chips:not(.collapsed) { animation: fadeIn .25s ease both; }
   .cat-chip {
     background: none; border: 1px solid var(--line); color: var(--ink-soft);
     padding: 7px 13px; border-radius: 999px; cursor: pointer;
@@ -302,20 +320,33 @@
 
   .receipt-items { padding: 2px 0; }
   .receipt-item {
+    position: relative; overflow: hidden;
+    border-bottom: 1px solid var(--line);
+    animation: itemPrint .4s cubic-bezier(.2,.7,.2,1) both;
+  }
+  .item-inner {
     display: grid;
     grid-template-columns: 1fr auto;
     grid-template-areas: "desc amt" "cat amt" "actions actions";
     gap: 2px 12px; align-items: baseline;
-    padding: 15px 0; font-size: 14px;
-    animation: itemPrint .4s cubic-bezier(.2,.7,.2,1) both;
-    position: relative; border-bottom: 1px solid var(--line);
+    padding: 15px 2px; font-size: 14px;
+    position: relative; z-index: 1; background: var(--bg);
+    touch-action: pan-y; will-change: transform;
+  }
+  /* revealed delete affordance behind the swiped row */
+  .item-swipe-bg {
+    position: absolute; inset: 0; z-index: 0;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 18px; background: var(--danger);
+    color: #fff; font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+    opacity: 0; transition: opacity .15s ease;
   }
   .receipt-item:last-child { border-bottom: none; }
   @keyframes itemPrint { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
   .receipt-item.removing { animation: itemRemove .35s ease forwards; }
-  @keyframes itemRemove { to { opacity: 0; transform: translateX(20px); height: 0; padding: 0; } }
-  .receipt-item.flash { animation: itemFlash .8s ease; }
-  @keyframes itemFlash { 0%, 100% { background: transparent; } 50% { background: var(--accent-soft); } }
+  @keyframes itemRemove { to { opacity: 0; transform: translateX(20px); height: 0; } }
+  .receipt-item.flash .item-inner { animation: itemFlash .8s ease; }
+  @keyframes itemFlash { 0%, 100% { background: var(--bg); } 50% { background: color-mix(in srgb, var(--accent) 9%, var(--bg)); } }
   .item-desc { grid-area: desc; color: var(--fg); word-break: break-word; cursor: pointer; font-size: 15px; }
   .item-desc .emoji { margin-right: 9px; }
   .item-cat {
@@ -670,7 +701,11 @@
       </div>
     </div>
     <div class="quick-amounts" id="quickAmounts"></div>
-    <div class="cat-chips" id="catChips"></div>
+    <button type="button" class="cat-select" id="catSelect" aria-expanded="false">
+      <span class="cat-select-current"><span class="label-pre">Category</span><span class="emoji">🍔</span><span class="cur" id="catSelectLabel">Food</span></span>
+      <span class="cat-select-chevron">▾</span>
+    </button>
+    <div class="cat-chips collapsed" id="catChips"></div>
     <button class="submit-btn" id="submitBtn">Record →</button>
   </div>
 
@@ -1128,15 +1163,35 @@ const renderCatChips = (containerId = 'catChips', selectedCat = 'food') => {
     btn.addEventListener('click', () => {
       wrap.querySelectorAll('.cat-chip').forEach(x => x.classList.remove('active'));
       btn.classList.add('active');
+      if (containerId === 'catChips') { updateCatTrigger(); collapseCatChips(); }
     });
     wrap.appendChild(btn);
   });
 };
-renderCatChips('catChips', 'food');
 const selectedCat = (containerId = 'catChips') => {
   const el = document.querySelector(`#${containerId} .cat-chip.active`);
   return el ? el.dataset.cat : 'other';
 };
+
+/* ===== COLLAPSIBLE CATEGORY SELECTOR ===== */
+const updateCatTrigger = () => {
+  const c = CATEGORIES.find(x => x.id === selectedCat('catChips')) || CATEGORIES[CATEGORIES.length - 1];
+  const lbl = document.getElementById('catSelectLabel');
+  const em = document.querySelector('#catSelect .cat-select-current .emoji');
+  if (lbl) lbl.textContent = c.label;
+  if (em) em.textContent = c.emoji;
+};
+const collapseCatChips = () => {
+  document.getElementById('catChips').classList.add('collapsed');
+  document.getElementById('catSelect').setAttribute('aria-expanded', 'false');
+};
+const toggleCatChips = () => {
+  const open = document.getElementById('catChips').classList.toggle('collapsed') === false;
+  document.getElementById('catSelect').setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+renderCatChips('catChips', 'food');
+updateCatTrigger();
+document.getElementById('catSelect').addEventListener('click', toggleCatChips);
 
 /* Populate recurring category select */
 const populateCatSelect = (id) => {
@@ -1280,6 +1335,17 @@ const renderReceiptItem = (item, dateKey, i, editable) => {
   row.style.animationDelay = (i * 40) + 'ms';
   row.dataset.id = item.id;
 
+  // revealed delete affordance (behind the swipeable content)
+  const bg = document.createElement('div');
+  bg.className = 'item-swipe-bg';
+  bg.textContent = 'Delete';
+  row.appendChild(bg);
+
+  // swipeable foreground
+  const inner = document.createElement('div');
+  inner.className = 'item-inner';
+  row.appendChild(inner);
+
   const desc = document.createElement('span');
   desc.className = 'item-desc';
   const emoji = catEmoji(item.cat);
@@ -1292,23 +1358,23 @@ const renderReceiptItem = (item, dateKey, i, editable) => {
     tag.textContent = '↻ recurring';
     desc.appendChild(tag);
   }
-  row.appendChild(desc);
+  inner.appendChild(desc);
 
   const cat = document.createElement('span');
   cat.className = 'item-cat';
   cat.textContent = catLabel(item.cat);
-  row.appendChild(cat);
+  inner.appendChild(cat);
 
   const amt = document.createElement('span');
   amt.className = 'item-amt';
   amt.textContent = fmt(item.amount);
-  row.appendChild(amt);
+  inner.appendChild(amt);
 
   if (item.note) {
     const noteDiv = document.createElement('div');
     noteDiv.className = 'item-note';
     noteDiv.textContent = '"' + item.note + '"';
-    row.appendChild(noteDiv);
+    inner.appendChild(noteDiv);
   }
 
   if (editable) {
@@ -1324,18 +1390,68 @@ const renderReceiptItem = (item, dateKey, i, editable) => {
     delBtn.onclick = (e) => { e.stopPropagation(); deleteExpense(item, dateKey); };
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
-    row.appendChild(actions);
+    inner.appendChild(actions);
 
     desc.addEventListener('click', e => {
       e.stopPropagation();
-      // Close all others
+      if (inner._didSwipe) { inner._didSwipe = false; return; }
       document.querySelectorAll('.receipt-item.expanded').forEach(x => {
         if (x !== row) x.classList.remove('expanded');
       });
       row.classList.toggle('expanded');
     });
+
+    attachSwipeToDelete(inner, bg, () => deleteExpense(item, dateKey));
   }
   return row;
+};
+
+/* Lightweight swipe-left-to-delete (no deps). Vertical scroll passes through. */
+const attachSwipeToDelete = (inner, bg, onDelete) => {
+  const THRESH = 84;
+  let sx = 0, sy = 0, drag = false, lock = null, captured = false;
+  const reset = (animate) => {
+    inner.style.transition = animate ? 'transform .28s cubic-bezier(.2,.7,.2,1)' : 'none';
+    inner.style.transform = 'translateX(0)';
+    bg.style.opacity = 0;
+  };
+  inner.addEventListener('pointerdown', e => {
+    if (e.target.closest('.item-actions')) return;
+    sx = e.clientX; sy = e.clientY; drag = true; lock = null; captured = false;
+    inner.style.transition = 'none';
+  });
+  inner.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (lock === null) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      lock = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if (lock === 'y') { drag = false; return; }
+    }
+    if (!captured) { try { inner.setPointerCapture(e.pointerId); } catch (_) {} captured = true; }
+    e.preventDefault();
+    const t = Math.max(-150, Math.min(0, dx));
+    inner.style.transform = `translateX(${t}px)`;
+    bg.style.opacity = Math.min(1, -t / THRESH);
+    bg.textContent = (-t >= THRESH) ? 'Release ✕' : 'Delete';
+  });
+  const finish = e => {
+    if (!drag) return;
+    drag = false;
+    const dx = (typeof e.clientX === 'number' ? e.clientX : sx) - sx;
+    if (lock === 'x') inner._didSwipe = true;   // suppress the tap-to-expand that would follow
+    if (lock === 'x' && -dx >= THRESH) {
+      inner.style.transition = 'transform .22s ease';
+      inner.style.transform = 'translateX(-100%)';
+      bg.style.opacity = 1;
+      try { navigator.vibrate && navigator.vibrate(14); } catch (_) {}
+      onDelete();
+    } else {
+      reset(true);
+    }
+  };
+  inner.addEventListener('pointerup', finish);
+  inner.addEventListener('pointercancel', finish);
 };
 
 const deleteExpense = (item, dKey) => {
@@ -1527,6 +1643,8 @@ const doSubmit = () => {
   document.getElementById('descInput').value = '';
   document.getElementById('amtInput').value = '';
   document.querySelectorAll('#catChips .cat-chip').forEach((c, i) => c.classList.toggle('active', i === 0));
+  updateCatTrigger();
+  collapseCatChips();
 
   const btn = document.getElementById('submitBtn');
   btn.classList.add('flash');
