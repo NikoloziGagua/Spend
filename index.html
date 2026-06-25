@@ -240,7 +240,8 @@
   .cat-select[aria-expanded="true"] { border-color: var(--fg); }
   .cat-select-current { display: flex; align-items: center; gap: 10px; text-transform: uppercase; font-size: 11px; letter-spacing: .12em; color: var(--ink-soft); }
   .cat-select-current .label-pre { color: var(--ink-faint); }
-  .cat-select-current .emoji { font-size: 15px; }
+  .cat-cur-icon { display: inline-flex; color: var(--ink-soft); }
+  .cat-cur-icon .cat-icon { width: 16px; height: 16px; }
   .cat-select-current .cur { color: var(--fg); font-weight: 500; }
   .cat-select-chevron { color: var(--ink-faint); font-size: 12px; transition: transform .25s ease; }
   .cat-select[aria-expanded="true"] .cat-select-chevron { transform: rotate(180deg); }
@@ -333,14 +334,15 @@
     position: relative; z-index: 1; background: var(--bg);
     touch-action: pan-y; will-change: transform;
   }
-  /* revealed delete affordance behind the swiped row */
+  /* revealed swipe affordances behind the row (delete →left, edit →right) */
   .item-swipe-bg {
     position: absolute; inset: 0; z-index: 0;
-    display: flex; align-items: center; justify-content: flex-end;
-    padding-right: 18px; background: var(--danger);
-    color: #fff; font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+    display: flex; align-items: center;
+    font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
     opacity: 0; transition: opacity .15s ease;
   }
+  .item-swipe-bg.del { justify-content: flex-end; padding-right: 18px; background: var(--danger); color: #fff; }
+  .item-swipe-bg.edit { justify-content: flex-start; padding-left: 18px; background: var(--accent); color: var(--accent-on); }
   .receipt-item:last-child { border-bottom: none; }
   @keyframes itemPrint { from { opacity: 0; transform: translateX(-5px); } to { opacity: 1; transform: translateX(0); } }
   .receipt-item.removing { animation: itemRemove .35s ease forwards; }
@@ -348,7 +350,11 @@
   .receipt-item.flash .item-inner { animation: itemFlash .8s ease; }
   @keyframes itemFlash { 0%, 100% { background: var(--bg); } 50% { background: color-mix(in srgb, var(--accent) 9%, var(--bg)); } }
   .item-desc { grid-area: desc; color: var(--fg); word-break: break-word; cursor: pointer; font-size: 15px; }
-  .item-desc .emoji { margin-right: 9px; }
+  .item-icon { color: var(--ink-faint); margin-right: 11px; display: inline-flex; vertical-align: -3px; }
+  .item-icon .cat-icon { width: 16px; height: 16px; }
+  /* monoline category icons (replace emoji) */
+  .cat-icon { width: 15px; height: 15px; flex-shrink: 0; vertical-align: -2px; }
+  .cat-icon.mini { width: 13px; height: 13px; margin-right: 3px; opacity: .85; }
   .item-cat {
     grid-area: cat; font-size: 9px; color: var(--ink-faint);
     text-transform: uppercase; letter-spacing: .12em;
@@ -503,7 +509,7 @@
   .cat-bar-row:last-child { margin-bottom: 0; }
   .cat-bar-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
   .cat-name { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-soft); }
-  .cat-name .emoji { font-size: 14px; margin-right: 6px; }
+  .cat-name .cat-icon { margin-right: 8px; color: var(--ink-faint); vertical-align: -2px; }
   .cat-amt { font-variant-numeric: tabular-nums; font-size: 14px; color: var(--fg); font-weight: 500; }
   .cat-amt .pct { color: var(--ink-faint); font-size: 10px; margin-left: 7px; font-weight: 400; }
   .cat-bar-track { height: 3px; background: var(--line); overflow: hidden; border-radius: 999px; }
@@ -702,7 +708,7 @@
     </div>
     <div class="quick-amounts" id="quickAmounts"></div>
     <button type="button" class="cat-select" id="catSelect" aria-expanded="false">
-      <span class="cat-select-current"><span class="label-pre">Category</span><span class="emoji">🍔</span><span class="cur" id="catSelectLabel">Food</span></span>
+      <span class="cat-select-current"><span class="label-pre">Category</span><span class="cat-cur-icon"></span><span class="cur" id="catSelectLabel">Food</span></span>
       <span class="cat-select-chevron">▾</span>
     </button>
     <div class="cat-chips collapsed" id="catChips"></div>
@@ -1076,6 +1082,25 @@ const dayTotal = (k) => (store[k] || []).reduce((s, e) => s + e.amount, 0);
 const catLabel = (id) => (CATEGORIES.find(c => c.id === id) || { label: 'Other' }).label;
 const catEmoji = (id) => (CATEGORIES.find(c => c.id === id) || { emoji: '•' }).emoji;
 
+/* ===== CATEGORY ICONS (monoline, premium — replaces emoji) ===== */
+const CAT_ICON = {
+  food:      '<path d="M3 2v7a2 2 0 0 0 2 2 2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
+  groceries: '<path d="m5 11 4-7"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8a2 2 0 0 0 2-1.6l1.6-7.4"/><path d="m9 11 1 9"/><path d="M15 11l-1 9"/>',
+  transport: '<path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.6 6.8 20 6 19 6H5a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+  fun:       '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  home:      '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+  health:    '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  shop:      '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  bills:     '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+  travel:    '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+  gift:      '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8"/><path d="M16.5 8a2.5 2.5 0 0 0 0-5C13 3 12 8 12 8"/>',
+  other:     '<circle cx="12" cy="12" r="9"/><path d="M12 17v-5"/><circle cx="12" cy="8" r=".5" fill="currentColor"/>',
+};
+const catIcon = (id, cls = 'cat-icon') => {
+  const p = CAT_ICON[id] || CAT_ICON.other;
+  return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+};
+
 /* ===== TOAST ===== */
 let toastTimer;
 const showToast = (msg, undoFn) => {
@@ -1159,7 +1184,7 @@ const renderCatChips = (containerId = 'catChips', selectedCat = 'food') => {
     const btn = document.createElement('button');
     btn.className = 'cat-chip' + (c.id === selectedCat ? ' active' : '');
     btn.dataset.cat = c.id;
-    btn.innerHTML = `<span class="emoji">${c.emoji}</span>${c.label}`;
+    btn.innerHTML = `${catIcon(c.id)}${c.label}`;
     btn.addEventListener('click', () => {
       wrap.querySelectorAll('.cat-chip').forEach(x => x.classList.remove('active'));
       btn.classList.add('active');
@@ -1177,9 +1202,9 @@ const selectedCat = (containerId = 'catChips') => {
 const updateCatTrigger = () => {
   const c = CATEGORIES.find(x => x.id === selectedCat('catChips')) || CATEGORIES[CATEGORIES.length - 1];
   const lbl = document.getElementById('catSelectLabel');
-  const em = document.querySelector('#catSelect .cat-select-current .emoji');
+  const em = document.querySelector('#catSelect .cat-cur-icon');
   if (lbl) lbl.textContent = c.label;
-  if (em) em.textContent = c.emoji;
+  if (em) em.innerHTML = catIcon(c.id);
 };
 const collapseCatChips = () => {
   document.getElementById('catChips').classList.add('collapsed');
@@ -1199,7 +1224,7 @@ const populateCatSelect = (id) => {
   sel.innerHTML = '';
   CATEGORIES.forEach(c => {
     const opt = document.createElement('option');
-    opt.value = c.id; opt.textContent = c.emoji + ' ' + c.label;
+    opt.value = c.id; opt.textContent = c.label;
     sel.appendChild(opt);
   });
 };
@@ -1261,7 +1286,7 @@ const updateAutocomplete = (query) => {
   items.forEach((it, i) => {
     const div = document.createElement('div');
     div.className = 'autocomplete-item';
-    div.innerHTML = `<span>${catEmoji(it.cat)} ${it.desc}</span><span class="ac-cat">${fmt(it.amount)}</span>`;
+    div.innerHTML = `<span>${catIcon(it.cat, 'cat-icon mini')}${it.desc}</span><span class="ac-cat">${fmt(it.amount)}</span>`;
     div.addEventListener('mousedown', e => {
       e.preventDefault();
       pickAutocomplete(i);
@@ -1335,11 +1360,15 @@ const renderReceiptItem = (item, dateKey, i, editable) => {
   row.style.animationDelay = (i * 40) + 'ms';
   row.dataset.id = item.id;
 
-  // revealed delete affordance (behind the swipeable content)
-  const bg = document.createElement('div');
-  bg.className = 'item-swipe-bg';
-  bg.textContent = 'Delete';
-  row.appendChild(bg);
+  // revealed swipe affordances (behind the swipeable content)
+  const bgEdit = document.createElement('div');
+  bgEdit.className = 'item-swipe-bg edit';
+  bgEdit.textContent = 'Edit';
+  row.appendChild(bgEdit);
+  const bgDel = document.createElement('div');
+  bgDel.className = 'item-swipe-bg del';
+  bgDel.textContent = 'Delete';
+  row.appendChild(bgDel);
 
   // swipeable foreground
   const inner = document.createElement('div');
@@ -1348,8 +1377,7 @@ const renderReceiptItem = (item, dateKey, i, editable) => {
 
   const desc = document.createElement('span');
   desc.className = 'item-desc';
-  const emoji = catEmoji(item.cat);
-  desc.innerHTML = `<span class="emoji">${emoji}</span>`;
+  desc.innerHTML = `<span class="item-icon">${catIcon(item.cat)}</span>`;
   const txt = document.createTextNode(item.desc || catLabel(item.cat));
   desc.appendChild(txt);
   if (item.recurringId) {
@@ -1401,19 +1429,20 @@ const renderReceiptItem = (item, dateKey, i, editable) => {
       row.classList.toggle('expanded');
     });
 
-    attachSwipeToDelete(inner, bg, () => deleteExpense(item, dateKey));
+    attachSwipe(inner, bgDel, bgEdit, () => deleteExpense(item, dateKey), () => openEditModal(item, dateKey));
   }
   return row;
 };
 
-/* Lightweight swipe-left-to-delete (no deps). Vertical scroll passes through. */
-const attachSwipeToDelete = (inner, bg, onDelete) => {
+/* Lightweight swipe gesture (no deps): left → delete, right → edit.
+   Vertical scroll passes through via direction lock. */
+const attachSwipe = (inner, bgDel, bgEdit, onDelete, onEdit) => {
   const THRESH = 84;
   let sx = 0, sy = 0, drag = false, lock = null, captured = false;
   const reset = (animate) => {
     inner.style.transition = animate ? 'transform .28s cubic-bezier(.2,.7,.2,1)' : 'none';
     inner.style.transform = 'translateX(0)';
-    bg.style.opacity = 0;
+    bgDel.style.opacity = 0; bgEdit.style.opacity = 0;
   };
   inner.addEventListener('pointerdown', e => {
     if (e.target.closest('.item-actions')) return;
@@ -1430,10 +1459,17 @@ const attachSwipeToDelete = (inner, bg, onDelete) => {
     }
     if (!captured) { try { inner.setPointerCapture(e.pointerId); } catch (_) {} captured = true; }
     e.preventDefault();
-    const t = Math.max(-150, Math.min(0, dx));
+    const t = Math.max(-150, Math.min(150, dx));
     inner.style.transform = `translateX(${t}px)`;
-    bg.style.opacity = Math.min(1, -t / THRESH);
-    bg.textContent = (-t >= THRESH) ? 'Release ✕' : 'Delete';
+    if (t < 0) {
+      bgEdit.style.opacity = 0;
+      bgDel.style.opacity = Math.min(1, -t / THRESH);
+      bgDel.textContent = (-t >= THRESH) ? 'Release ✕' : 'Delete';
+    } else {
+      bgDel.style.opacity = 0;
+      bgEdit.style.opacity = Math.min(1, t / THRESH);
+      bgEdit.textContent = (t >= THRESH) ? 'Release ✎' : 'Edit';
+    }
   });
   const finish = e => {
     if (!drag) return;
@@ -1443,9 +1479,13 @@ const attachSwipeToDelete = (inner, bg, onDelete) => {
     if (lock === 'x' && -dx >= THRESH) {
       inner.style.transition = 'transform .22s ease';
       inner.style.transform = 'translateX(-100%)';
-      bg.style.opacity = 1;
+      bgDel.style.opacity = 1;
       try { navigator.vibrate && navigator.vibrate(14); } catch (_) {}
       onDelete();
+    } else if (lock === 'x' && dx >= THRESH) {
+      try { navigator.vibrate && navigator.vibrate(10); } catch (_) {}
+      reset(true);
+      setTimeout(onEdit, 120);
     } else {
       reset(true);
     }
@@ -1555,7 +1595,7 @@ const renderInsights = () => {
     if (!lim || lim <= 0) return;
     const spent = catTotals[cat] || 0;
     if (spent >= lim) {
-      insights.push({ type: 'warn', html: `<strong>${catEmoji(cat)} ${catLabel(cat)}</strong> is over its limit (${fmt(spent)} of ${fmt(lim)}).` });
+      insights.push({ type: 'warn', html: `<strong>${catLabel(cat)}</strong> is over its limit (${fmt(spent)} of ${fmt(lim)}).` });
     }
   });
 
@@ -1756,7 +1796,7 @@ const renderBudget = () => {
     row.className = 'budget-cat-row';
     const fillW = lim > 0 ? Math.min(spent / lim, 1.2) : 0;
     row.innerHTML = `
-      <div class="bc-name">${c.emoji} ${c.label}</div>
+      <div class="bc-name">${catIcon(c.id, 'cat-icon mini')}${c.label}</div>
       <div class="bc-bar"><div class="bc-bar-fill ${spent > lim && lim > 0 ? 'over' : ''}" style="--w:${fillW * 100}%"></div></div>
       <div class="bc-amt">${fmt(spent)}${lim > 0 ? ' / ' + fmt(lim) : ''}</div>
       <button class="bc-set">${lim > 0 ? 'edit' : 'set'}</button>
@@ -1806,7 +1846,7 @@ const renderRecurringList = () => {
     row.className = 'recurring-row';
     row.innerHTML = `
       <div>
-        <div class="rec-desc">${catEmoji(r.cat)} ${r.desc}</div>
+        <div class="rec-desc">${catIcon(r.cat, 'cat-icon mini')}${r.desc}</div>
         <div class="rec-meta">${r.freq} · next ${r.nextDate || '—'}</div>
       </div>
       <div class="rec-amt">${fmt(r.amount)}</div>
@@ -1870,7 +1910,7 @@ const renderHistoryFilters = () => {
   CATEGORIES.forEach(c => {
     const btn = document.createElement('button');
     btn.className = 'cat-chip' + (historyFilterCat === c.id ? ' active' : '');
-    btn.innerHTML = `<span class="emoji">${c.emoji}</span>${c.label}`;
+    btn.innerHTML = `${catIcon(c.id)}${c.label}`;
     btn.onclick = () => { historyFilterCat = c.id; renderHistory(); };
     wrap.appendChild(btn);
   });
@@ -1910,7 +1950,7 @@ const renderHistory = () => {
       hit.innerHTML = `
         <div class="search-hit-date">${dateLabel} · ${catLabel(e.cat)}</div>
         <div class="search-hit-row">
-          <span>${catEmoji(e.cat)} ${highlighted}</span>
+          <span>${catIcon(e.cat, 'cat-icon mini')}${highlighted}</span>
           <span style="font-variant-numeric:tabular-nums;font-weight:500;color:var(--accent)">${fmt(e.amount)}</span>
         </div>
       `;
@@ -1954,7 +1994,7 @@ const renderHistory = () => {
       const items = dObj.items;
       const dd = parseKey(dObj.key);
       const dayLabel = dd.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric' });
-      const cats = [...new Set(items.map(i => catEmoji(i.cat)))].slice(0, 5).join(' ');
+      const cats = [...new Set(items.map(i => i.cat))].slice(0, 5).map(c => catIcon(c, 'cat-icon mini')).join('');
       const dayTotal = items.reduce((s,e)=>s+e.amount, 0);
       const row = document.createElement('div');
       row.className = 'history-day-row';
@@ -2164,7 +2204,7 @@ const renderStats = () => {
       row.className = 'cat-bar-row';
       row.innerHTML = `
         <div class="cat-bar-top">
-          <span class="cat-name"><span class="emoji">${catEmoji(catId)}</span>${catLabel(catId)}</span>
+          <span class="cat-name">${catIcon(catId)}${catLabel(catId)}</span>
           <span class="cat-amt">${fmt(amt)}<span class="pct">${pct}%</span></span>
         </div>
         <div class="cat-bar-track"><div class="cat-bar-fill" style="transition-delay:${i*60}ms"></div></div>
@@ -2198,7 +2238,7 @@ const renderStats = () => {
       row.style.cursor = 'pointer';
       row.innerHTML = `
         <span class="day-num">${d}</span>
-        <span class="day-summary">${catEmoji(e.cat)} ${e.desc || catLabel(e.cat)}</span>
+        <span class="day-summary">${catIcon(e.cat, 'cat-icon mini')}${e.desc || catLabel(e.cat)}</span>
         <span class="day-total">${fmt(e.amount)}</span>
       `;
       row.onclick = () => openDayModal(k);
