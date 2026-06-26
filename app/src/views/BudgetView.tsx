@@ -1,24 +1,11 @@
-import { motion } from 'framer-motion'
+import NumberFlow from '@number-flow/react'
 import { Repeat, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { CATEGORIES, CatIcon, catById } from '../categories'
+import { CATEGORIES, CatIcon } from '../categories'
 import { monthKey, useStore } from '../lib/store'
 import type { CatId, Freq } from '../types'
-
-function Bar({ pct, tone }: { pct: number; tone: 'accent' | 'warn' | 'over' }) {
-  const color = tone === 'over' ? 'var(--danger)' : tone === 'warn' ? 'var(--warn)' : 'var(--accent)'
-  return (
-    <div className="h-[10px] overflow-hidden rounded-full bg-line">
-      <motion.div
-        className="h-full rounded-full"
-        style={{ background: color }}
-        initial={{ width: 0 }}
-        animate={{ width: `${Math.min(pct, 100)}%` }}
-        transition={{ duration: 1, ease: [0.2, 0.7, 0.2, 1] }}
-      />
-    </div>
-  )
-}
+import { Card } from '../components/ui'
+import { ProgressRing } from '../components/viz'
 
 export function BudgetView() {
   const { data, budgets, recurring, fmt, setOverallBudget, setCatBudget, addRecurring, deleteRecurring, showToast } =
@@ -44,8 +31,8 @@ export function BudgetView() {
   const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate()
   const left = overall - monthSpent
   const dailyLeft = daysLeft > 0 ? left / daysLeft : 0
-  const tone: 'accent' | 'warn' | 'over' =
-    monthSpent > overall ? 'over' : overall > 0 && monthSpent / overall > 0.8 ? 'warn' : 'accent'
+  const usedPct = overall > 0 ? (monthSpent / overall) * 100 : 0
+  const tone = monthSpent > overall ? 'var(--danger)' : overall > 0 && usedPct > 80 ? 'var(--warn)' : 'var(--accent)'
 
   const setOverall = () => {
     const n = parseFloat(budgetInput.replace(',', '.'))
@@ -65,36 +52,39 @@ export function BudgetView() {
 
   return (
     <div>
-      {/* overall */}
-      <div className="mb-[30px] border-b border-line pb-6">
-        <div className="mb-3.5 flex items-baseline justify-between">
-          <span className="text-[10px] uppercase tracking-[.2em] text-faint">Monthly budget</span>
-          <span className="font-mono text-[13px] tabular-nums text-sub">
+      {/* overall budget ring */}
+      <Card className="mb-5">
+        <div className="flex items-center gap-5">
+          <ProgressRing value={usedPct / 100} size={104} stroke={10} color={tone}>
+            {overall > 0 ? (
+              <div>
+                <div className="font-mono text-[20px] font-semibold tabular-nums text-ink">
+                  <NumberFlow value={Math.round(usedPct)} />%
+                </div>
+                <div className="mt-0.5 text-[7.5px] uppercase tracking-[.14em] text-faint">used</div>
+              </div>
+            ) : (
+              <div className="px-3 text-center text-[9px] uppercase leading-tight tracking-[.12em] text-faint">no budget</div>
+            )}
+          </ProgressRing>
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 text-[10px] uppercase tracking-[.2em] text-faint">Monthly budget</div>
             {overall > 0 ? (
               <>
-                <span className="text-[15px] font-semibold text-ink">{fmt(monthSpent)}</span>
-                <span className="mx-1 text-faint">of</span>
-                <span>{fmt(overall)}</span>
+                <div className="font-serif text-[30px] leading-none text-ink">{fmt(monthSpent)}</div>
+                <div className="mt-1 font-serif text-[14px] italic text-faint">of {fmt(overall)}</div>
+                <div className="mt-2.5 text-[11px] tracking-[.02em]" style={{ color: left < 0 ? 'var(--danger)' : 'var(--sub)' }}>
+                  {left < 0 ? `${fmt(-left)} over` : `${fmt(left)} left`}
+                  <span className="text-faint"> · {fmt(Math.max(0, dailyLeft))}/day · {daysLeft}d</span>
+                </div>
               </>
             ) : (
-              <span className="text-faint">no budget set</span>
+              <div className="font-serif text-[15px] italic leading-snug text-faint">
+                Set a monthly budget to track your pace.
+              </div>
             )}
-          </span>
-        </div>
-        <Bar pct={overall > 0 ? (monthSpent / overall) * 100 : 0} tone={tone} />
-        {overall > 0 && (
-          <div className="mt-2.5 flex justify-between text-[10px] tracking-[.04em] text-faint">
-            {left < 0 ? (
-              <span className="text-danger">{fmt(-left)} over</span>
-            ) : (
-              <span className="text-ink">{fmt(left)} left</span>
-            )}
-            <span>
-              {left >= 0 ? `${fmt(dailyLeft)}/day for ` : ''}
-              {daysLeft} day{daysLeft === 1 ? '' : 's'} left
-            </span>
           </div>
-        )}
+        </div>
         <div className="mt-4 flex items-center gap-2.5">
           <input
             value={budgetInput}
@@ -111,21 +101,18 @@ export function BudgetView() {
             Set
           </button>
         </div>
-      </div>
+      </Card>
 
       {/* by category */}
-      <div className="mb-[38px]">
-        <div className="mb-[18px] font-mono text-[10px] uppercase tracking-[.2em] text-faint">By category</div>
+      <Card className="mb-5" delay={0.06}>
+        <div className="mb-3 font-mono text-[10px] uppercase tracking-[.2em] text-faint">By category</div>
         {CATEGORIES.map((c, i) => {
           const spent = catTotals[c.id] || 0
           const lim = budgets.byCat[c.id] || 0
           const over = lim > 0 && spent > lim
           return (
-            <div
-              key={c.id}
-              className={`flex items-center gap-3 py-3.5 ${i === 0 ? '' : 'border-t border-line'}`}
-            >
-              <div className="flex min-w-[84px] items-center gap-2 text-[11px] uppercase tracking-[.08em] text-sub">
+            <div key={c.id} className={`flex items-center gap-3 py-3 ${i === 0 ? '' : 'border-t border-line'}`}>
+              <div className="flex min-w-[80px] items-center gap-2 text-[11px] uppercase tracking-[.08em] text-sub">
                 <CatIcon id={c.id} size={13} className="text-faint" />
                 {c.label}
               </div>
@@ -134,11 +121,11 @@ export function BudgetView() {
                   className="h-full rounded-full transition-[width] duration-700"
                   style={{
                     width: `${lim > 0 ? Math.min((spent / lim) * 100, 100) : 0}%`,
-                    background: over ? 'var(--danger)' : 'var(--accent-dim)',
+                    background: over ? 'var(--danger)' : 'linear-gradient(90deg, var(--accent-dim), var(--accent))',
                   }}
                 />
               </div>
-              <div className="min-w-[96px] text-right font-mono text-[11px] tabular-nums text-sub">
+              <div className="min-w-[92px] text-right font-mono text-[11px] tabular-nums text-sub">
                 {fmt(spent)}
                 {lim > 0 ? ` / ${fmt(lim)}` : ''}
               </div>
@@ -151,9 +138,8 @@ export function BudgetView() {
             </div>
           )
         })}
-      </div>
+      </Card>
 
-      {/* recurring */}
       <RecurringSection
         recurring={recurring}
         fmt={fmt}
@@ -195,17 +181,17 @@ function RecurringSection({
   }
 
   return (
-    <div className="mb-[38px]">
-      <div className="mb-3.5 font-mono text-[10px] uppercase tracking-[.2em] text-faint">Recurring</div>
+    <Card className="mb-7" delay={0.1}>
+      <div className="mb-2 font-mono text-[10px] uppercase tracking-[.2em] text-faint">Recurring</div>
       <p className="mb-3.5 font-serif text-[13px] italic leading-[1.5] text-faint">
         Subscriptions, rent, anything that comes back. Auto-logged on schedule.
       </p>
 
       {recurring.length === 0 ? (
-        <div className="py-2 font-serif text-[13px] italic text-faint">No recurring expenses yet.</div>
+        <div className="py-1 font-serif text-[13px] italic text-faint">No recurring expenses yet.</div>
       ) : (
         recurring.map((r) => (
-          <div key={r.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 border-b border-line py-3.5">
+          <div key={r.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 border-b border-line py-3 last:border-0">
             <div>
               <div className="flex items-center gap-1.5 text-[14px] text-ink">
                 <CatIcon id={r.cat} size={13} className="text-faint" />
@@ -223,7 +209,7 @@ function RecurringSection({
         ))
       )}
 
-      <div className="mt-4 rounded-tile glass p-4">
+      <div className="mt-4 border-t border-line pt-4">
         <div className="mb-3 flex gap-4">
           <div className="min-w-0 flex-1">
             <label className="mb-1.5 block text-[9px] uppercase tracking-[.18em] text-faint">Description</label>
@@ -289,6 +275,6 @@ function RecurringSection({
           Add recurring →
         </button>
       </div>
-    </div>
+    </Card>
   )
 }

@@ -40,9 +40,9 @@ export default function App() {
       className="relative mx-auto min-h-[100dvh] max-w-col"
       style={{ paddingTop: 'max(env(safe-area-inset-top), 18px)', paddingBottom: 'calc(env(safe-area-inset-bottom) + 120px)' }}
     >
-      <Header view={view} />
+      <Header />
 
-      <main className="px-[26px] pt-[26px]">
+      <main className="px-[26px] pt-[22px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={view}
