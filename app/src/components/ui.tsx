@@ -109,3 +109,25 @@ export function Sheet({
 export function SectionLabel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <div className={`uppercase-label ${className}`}>{children}</div>
 }
+
+/* Frosted glass bento card */
+export function Card({
+  children,
+  className = '',
+  delay = 0,
+}: {
+  children: ReactNode
+  className?: string
+  delay?: number
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, type: 'spring', stiffness: 300, damping: 28 }}
+      className={`glass rounded-tile p-5 ${className}`}
+    >
+      {children}
+    </motion.div>
+  )
+}

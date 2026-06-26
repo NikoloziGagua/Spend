@@ -5,6 +5,7 @@ import { CATEGORIES, CatIcon, catLabel } from '../categories'
 import { historyData, MONTH_NAMES } from '../lib/analytics'
 import { parseKey, useStore } from '../lib/store'
 import { useUI } from '../lib/uiContext'
+import { Card } from '../components/ui'
 
 function highlight(text: string, q: string): ReactNode {
   if (!q) return text
@@ -31,7 +32,7 @@ export function HistoryView() {
 
   return (
     <div>
-      <div className="mb-[18px] flex items-center gap-2.5 border-b border-line px-0.5 py-2.5">
+      <div className="glass mb-[18px] flex items-center gap-2.5 rounded-full px-4 py-3">
         <Search size={15} className="shrink-0 text-faint" />
         <input
           value={search}
@@ -66,11 +67,12 @@ export function HistoryView() {
         res.hits.length === 0 ? (
           <div className="py-10 text-center font-serif text-[16px] italic text-faint">— no matches —</div>
         ) : (
-          res.hits.map(({ key, e }, i) => (
+          <Card>
+            {res.hits.map(({ key, e }, i) => (
             <button
               key={key + i}
               onClick={() => openDay(key)}
-              className="block w-full border-b border-line py-3.5 text-left"
+              className="block w-full border-b border-line py-3.5 text-left last:border-0"
             >
               <div className="mb-1 text-[9px] uppercase tracking-[.12em] text-faint">
                 {parseKey(key).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} ·{' '}
@@ -84,7 +86,8 @@ export function HistoryView() {
                 <span className="font-mono font-medium tabular-nums text-ink">{fmt(e.amount)}</span>
               </div>
             </button>
-          ))
+            ))}
+          </Card>
         )
       ) : res.months.length === 0 ? (
         <div className="py-16 text-center font-serif text-[16px] italic text-faint">
@@ -97,7 +100,7 @@ export function HistoryView() {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: mi * 0.06 }}
-            className="mb-[38px]"
+            className="glass mb-4 rounded-tile p-5"
           >
             <div className="mb-1.5 flex items-baseline justify-between border-b border-line pb-3">
               <div className="font-serif text-[24px] italic text-ink">
