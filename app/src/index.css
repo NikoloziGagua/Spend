@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===================================================================
+   Quiet Ledger — minimal premium tokens (Silver Glass, Minimal Air)
+   Near-white dotted canvas · soft top spotlight · frosted silver glass
+   =================================================================== */
+:root,
+[data-theme='light'] {
+  --bg: #fbfbfd;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --ink: #14161b;
+  --sub: #686d76;
+  --faint: #a8adb5;
+  --accent: #14161b;
+  --accent-dim: #9ca1a9;
+  --accent-on: #ffffff;
+  --accent-soft: rgba(20, 22, 27, 0.055);
+  --danger: #c75a47;
+  --warn: #b98a3c;
+  --ok: #3e9b6e;
+  --line: rgba(20, 24, 32, 0.07);
+  --line-strong: rgba(20, 24, 32, 0.12);
+  --grain-opacity: 0.025;
+
+  --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(252, 252, 254, 0.62));
+  --glass-border: rgba(255, 255, 255, 0.9);
+  --glass-ring: rgba(180, 186, 196, 0.3);
+  --glass-blur: blur(24px) saturate(1.6);
+  --glass-shadow: 0 12px 40px -16px rgba(30, 36, 50, 0.22);
+  --glass-sheen: rgba(255, 255, 255, 0.85);
+
+  --shadow-tile: 0 1px 2px rgba(40, 30, 15, 0.05), 0 10px 30px -18px rgba(30, 36, 50, 0.25);
+  --shadow-pop: 0 16px 44px -18px rgba(30, 36, 50, 0.32);
+
+  --canvas: linear-gradient(180deg, #fcfcfe 0%, #f4f5f8 100%);
+  --spotlight: radial-gradient(120% 70% at 50% -8%, #ffffff 0%, rgba(255, 255, 255, 0) 60%);
+  --dots: radial-gradient(rgba(40, 48, 64, 0.055) 1px, transparent 1.5px);
+  --dot-size: 26px;
+}
+
+[data-theme='dark'] {
+  --bg: #0c0e11;
+  --surface: #15181d;
+  --card: #15181d;
+  --ink: #eceef2;
+  --sub: #969ba4;
+  --faint: #5a6068;
+  --accent: #eceef2;
+  --accent-dim: #6e747d;
+  --accent-on: #0c0e11;
+  --accent-soft: rgba(236, 238, 242, 0.08);
+  --danger: #dd7a62;
+  --warn: #d2a551;
+  --ok: #5cb98a;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --grain-opacity: 0.04;
+
+  --glass-bg: linear-gradient(180deg, rgba(28, 32, 39, 0.72), rgba(18, 21, 26, 0.6));
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-ring: rgba(255, 255, 255, 0.04);
+  --glass-blur: blur(24px) saturate(1.3);
+  --glass-shadow: 0 16px 44px -18px rgba(0, 0, 0, 0.7);
+  --glass-sheen: rgba(255, 255, 255, 0.12);
+
+  --shadow-tile: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -18px rgba(0, 0, 0, 0.6);
+  --shadow-pop: 0 18px 48px -18px rgba(0, 0, 0, 0.7);
+
+  --canvas: linear-gradient(180deg, #0e1115 0%, #0a0c0f 100%);
+  --spotlight: radial-gradient(120% 72% at 50% -10%, rgba(210, 220, 235, 0.12) 0%, rgba(210, 220, 235, 0) 62%);
+  --dots: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1.5px);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  min-height: 100%;
+  background: var(--dots) 0 0 / var(--dot-size) var(--dot-size), var(--spotlight), var(--canvas);
+  background-attachment: fixed;
+  color: var(--ink);
+  transition: background-color 0.45s ease, color 0.45s ease;
+}
+
+body {
+  margin: 0;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  color: var(--ink);
+  background: transparent;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* film grain for depth */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  z-index: 1;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+@layer components {
+  /* frosted silver glass surface */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-sheen), inset 0 0 0 1px var(--glass-ring);
+  }
+  .uppercase-label {
+    @apply uppercase text-faint;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

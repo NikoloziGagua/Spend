@@ -1,0 +1,7 @@
+# app build tooling
+app/node_modules/
+app/dist/
+
+# misc
+.DS_Store
+*.log
