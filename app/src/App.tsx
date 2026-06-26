@@ -42,7 +42,7 @@ export default function App() {
     >
       <Header />
 
-      <main className="px-[26px] pt-[22px]">
+      <main className="px-4 pt-3">
         <AnimatePresence mode="wait">
           <motion.div
             key={view}

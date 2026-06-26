@@ -21,6 +21,8 @@ export default {
         danger: 'var(--danger)',
       },
       fontFamily: {
+        display: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
         serif: ['"Instrument Serif"', 'Georgia', 'serif'],
       },

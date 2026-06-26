@@ -5,12 +5,15 @@ A premium, offline-first personal spending tracker. The frontend is a
 that are committed at the **repo root** and served by GitHub Pages.
 
 ## Design language — the `premium-app-ui` skill
-The UI follows the locked-in **Quiet Ledger** look (the skill's "Minimal Air"
-variant, with the user's overrides): near-white **dotted canvas + soft top
-spotlight**, frosted **silver glass** surfaces, an editorial serif hero number,
-a floating glass bottom-pill nav, monoline **lucide** icons (no emoji), and
-spring motion. Full spec + reference boards live in
-`.claude/skills/premium-app-ui/`. Use it for any UI work.
+The UI follows the skill's **Warm Bento** structure rendered in a **silver/ink**
+palette (per the user — not the warm browns): dense rounded **glass bento cards**
+(no dead whitespace), **bold Inter** display titles + numbers, icon-badged stat
+tiles, a dark/inverted **focal card**, a **progress ring + segmented bar**, a
+**week strip**, area + donut charts, an **icon floating bottom-pill nav**,
+monoline **lucide** icons (no emoji), a dotted canvas + soft spotlight, and
+spring + scroll-reveal motion. Fonts: Inter (display/body), JetBrains Mono
+(small tabular labels), Instrument Serif (occasional italic captions). Full spec
++ reference boards live in `.claude/skills/premium-app-ui/`. Use it for any UI work.
 
 ## Stack
 - **Vite + React + TS + Tailwind** (`base: './'` for subpath hosting).

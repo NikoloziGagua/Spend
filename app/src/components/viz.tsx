@@ -133,3 +133,57 @@ export function segmentShade(i: number) {
   const mix = Math.max(26, 94 - i * 13)
   return `color-mix(in srgb, var(--accent) ${mix}%, var(--surface))`
 }
+
+/* Segmented progress bar (N pills, first `filled` lit) */
+export function SegmentedBar({ filled, total }: { filled: number; total: number }) {
+  return (
+    <div className="flex gap-1.5">
+      {Array.from({ length: total }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="h-1.5 flex-1 rounded-full"
+          style={{ background: i < filled ? 'var(--accent)' : 'var(--line)', transformOrigin: 'left' }}
+          initial={{ scaleX: 0.5, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
+          transition={{ delay: 0.15 + i * 0.05, type: 'spring', stiffness: 320, damping: 26 }}
+        />
+      ))}
+    </div>
+  )
+}
+
+export interface WeekCell {
+  key: string
+  wd: string
+  d: number
+  total: number
+  isToday: boolean
+}
+
+/* Current-week strip; today highlighted as a dark pill, spend shown as a dot */
+export function WeekStrip({ cells, onPick }: { cells: WeekCell[]; onPick: (k: string) => void }) {
+  return (
+    <div className="grid grid-cols-7 gap-1.5">
+      {cells.map((c) => (
+        <button
+          key={c.key}
+          onClick={() => onPick(c.key)}
+          className="flex flex-col items-center gap-1 rounded-2xl py-2 transition-colors"
+          style={{
+            background: c.isToday ? 'var(--ink)' : 'transparent',
+            color: c.isToday ? 'var(--bg)' : 'var(--ink)',
+          }}
+        >
+          <span className="text-[10px] font-semibold uppercase" style={{ color: c.isToday ? 'var(--bg)' : 'var(--faint)' }}>
+            {c.wd}
+          </span>
+          <span className="font-display text-[15px] font-bold tabular-nums">{c.d}</span>
+          <span
+            className="h-1 w-1 rounded-full"
+            style={{ background: c.total > 0 ? (c.isToday ? 'var(--bg)' : 'var(--accent)') : 'transparent' }}
+          />
+        </button>
+      ))}
+    </div>
+  )
+}

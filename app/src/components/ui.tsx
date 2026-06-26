@@ -1,6 +1,7 @@
 import NumberFlow from '@number-flow/react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { CSSProperties, ReactNode } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import { useStore } from '../lib/store'
 
 /* Animated currency value (NumberFlow + Intl currency) */
@@ -126,6 +127,84 @@ export function Card({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, type: 'spring', stiffness: 300, damping: 28 }}
       className={`glass rounded-tile p-5 ${className}`}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+/* Scroll-reveal wrapper — animates in once as it enters the viewport */
+export function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ delay, type: 'spring', stiffness: 260, damping: 26 }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+/* Big bold view header (small label + heavy title) */
+export function ViewHeader({ label, title }: { label: string; title: string }) {
+  return (
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mb-4">
+      <div className="text-[13px] font-medium text-faint">{label}</div>
+      <h1 className="mt-0.5 font-display text-[34px] font-extrabold leading-none tracking-[-.03em] text-ink">{title}</h1>
+    </motion.div>
+  )
+}
+
+/* Soft circular icon badge */
+export function IconBadge({ icon: Icon, tone = 'ink' }: { icon: LucideIcon; tone?: 'ink' | 'danger' | 'ok' | 'warn' }) {
+  const color = tone === 'danger' ? 'var(--danger)' : tone === 'ok' ? 'var(--ok)' : tone === 'warn' ? 'var(--warn)' : 'var(--ink)'
+  return (
+    <div
+      className="flex h-9 w-9 items-center justify-center rounded-full"
+      style={{ background: 'var(--accent-soft)', color }}
+    >
+      <Icon size={17} strokeWidth={2} />
+    </div>
+  )
+}
+
+/* Icon-badged stat tile with a bold display number */
+export function StatTile({
+  icon,
+  label,
+  children,
+  tone,
+  delay = 0,
+}: {
+  icon: LucideIcon
+  label: string
+  children: ReactNode
+  tone?: 'ink' | 'danger' | 'ok' | 'warn'
+  delay?: number
+}) {
+  return (
+    <Card delay={delay} className="flex flex-col gap-3">
+      <IconBadge icon={icon} tone={tone} />
+      <div>
+        <div className="font-display text-[27px] font-extrabold leading-none tracking-[-.02em] text-ink">{children}</div>
+        <div className="mt-1.5 text-[13px] font-medium text-faint">{label}</div>
+      </div>
+    </Card>
+  )
+}
+
+/* Inverted focal card (dark on light, light on dark) */
+export function DarkCard({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, type: 'spring', stiffness: 280, damping: 26 }}
+      className={`relative overflow-hidden rounded-tile p-5 ${className}`}
+      style={{ background: 'var(--ink)', color: 'var(--bg)', boxShadow: 'var(--shadow-pop)' }}
     >
       {children}
     </motion.div>

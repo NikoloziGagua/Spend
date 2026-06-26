@@ -50,8 +50,8 @@ export function AddForm() {
   }
 
   return (
-    <div className="mb-[30px] border-b border-line pb-2">
-      <span className="mb-[10px] block text-[9px] uppercase tracking-[.2em] text-faint">+ New expense</span>
+    <div>
+      <span className="mb-[10px] block text-[10px] font-bold uppercase tracking-[.16em] text-faint">+ New expense</span>
 
       <div className="mb-[18px] flex items-end gap-4">
         <div className="relative min-w-0 flex-1">

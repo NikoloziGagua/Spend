@@ -2,7 +2,7 @@ import { useRef, type ChangeEvent, type ReactNode } from 'react'
 import { catLabel } from '../categories'
 import { todayKey, useStore } from '../lib/store'
 import type { Settings } from '../types'
-import { Card, Toggle } from '../components/ui'
+import { Card, Toggle, ViewHeader } from '../components/ui'
 
 const TOGGLES: { key: keyof Settings; label: string; desc: string }[] = [
   { key: 'autoRecurring', label: 'Auto-log recurring', desc: 'Add subscriptions on their schedule' },
@@ -65,8 +65,9 @@ export function SettingsView() {
 
   return (
     <div>
+      <ViewHeader label="Preferences" title="More" />
       <Card className="mb-4">
-        <div className="mb-3.5 font-serif text-[24px] italic text-ink">Behavior</div>
+        <div className="mb-3.5 font-display text-[18px] font-extrabold text-ink">Behavior</div>
         {TOGGLES.map((t, i) => (
           <div
             key={t.key}
@@ -82,7 +83,7 @@ export function SettingsView() {
       </Card>
 
       <Card className="mb-4">
-        <div className="mb-3.5 font-serif text-[24px] italic text-ink">Data</div>
+        <div className="mb-3.5 font-display text-[18px] font-extrabold text-ink">Data</div>
         <div className="mb-3 flex flex-wrap gap-2">
           <DataBtn onClick={exportJson}>Export JSON</DataBtn>
           <DataBtn onClick={() => fileRef.current?.click()}>Import JSON</DataBtn>
@@ -103,7 +104,7 @@ export function SettingsView() {
       </Card>
 
       <Card className="mb-4">
-        <div className="mb-3.5 font-serif text-[24px] italic text-ink">About</div>
+        <div className="mb-3.5 font-display text-[18px] font-extrabold text-ink">About</div>
         <p className="font-serif text-[14px] italic leading-[1.6] text-faint">
           A small ledger. Your numbers stay on your device. Nothing sent anywhere.
         </p>

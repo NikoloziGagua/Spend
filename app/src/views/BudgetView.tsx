@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { CATEGORIES, CatIcon } from '../categories'
 import { monthKey, useStore } from '../lib/store'
 import type { CatId, Freq } from '../types'
-import { Card } from '../components/ui'
+import { Card, ViewHeader } from '../components/ui'
 import { ProgressRing } from '../components/viz'
 
 export function BudgetView() {
@@ -52,8 +52,9 @@ export function BudgetView() {
 
   return (
     <div>
+      <ViewHeader label="This month" title="Budget" />
       {/* overall budget ring */}
-      <Card className="mb-5">
+      <Card className="mb-3">
         <div className="flex items-center gap-5">
           <ProgressRing value={usedPct / 100} size={104} stroke={10} color={tone}>
             {overall > 0 ? (

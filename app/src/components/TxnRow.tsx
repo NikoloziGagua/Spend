@@ -43,8 +43,8 @@ export function TxnRow({ item, dateKey, index }: { item: Expense; dateKey: strin
       </motion.div>
 
       <motion.div
-        className="relative z-[1] px-0.5 py-[15px]"
-        style={{ x, background: 'var(--bg)', touchAction: 'pan-y' }}
+        className="relative z-[1] px-0.5 py-[14px]"
+        style={{ x, background: 'var(--card)', touchAction: 'pan-y' }}
         drag="x"
         dragDirectionLock
         dragConstraints={{ left: 0, right: 0 }}

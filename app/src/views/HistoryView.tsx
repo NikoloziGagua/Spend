@@ -5,7 +5,7 @@ import { CATEGORIES, CatIcon, catLabel } from '../categories'
 import { historyData, MONTH_NAMES } from '../lib/analytics'
 import { parseKey, useStore } from '../lib/store'
 import { useUI } from '../lib/uiContext'
-import { Card } from '../components/ui'
+import { Card, ViewHeader } from '../components/ui'
 
 function highlight(text: string, q: string): ReactNode {
   if (!q) return text
@@ -32,6 +32,7 @@ export function HistoryView() {
 
   return (
     <div>
+      <ViewHeader label="All activity" title="History" />
       <div className="glass mb-[18px] flex items-center gap-2.5 rounded-full px-4 py-3">
         <Search size={15} className="shrink-0 text-faint" />
         <input
